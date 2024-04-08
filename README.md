@@ -28,9 +28,9 @@ kcli create plan -f ./ceph_cluster.yml -P ceph_dev_folder=<path-to-your-ceph-src
 ```
 
 This will create a new 3-nodes ceph cluster which has teh following nodes:
- . ceph-node-0 (192.168.100.100)
- . ceph-node-1 (192.168.100.101)
- . ceph-node-2 (192.168.100.102)
+- ceph-node-0 (192.168.100.100)
+- ceph-node-1 (192.168.100.101)
+- ceph-node-2 (192.168.100.102)
 
 Now user can enter to any node by using (where X is the # of the node):
 
