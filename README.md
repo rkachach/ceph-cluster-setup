@@ -1,6 +1,15 @@
 # ceph-cluster-setup
 Simple Ceph cluster setup by using kcli
 
+Prerequisites: install kcli (https://github.com/karmab/kcli)
+
+Or just use the following alias:
+
+``` bash
+alias kcli='podman run --net host -it --rm --security-opt label=disable -v $HOME/.ssh:/root/.ssh -v $HOME/.kcli:/root/.kcli -v /var/lib/libvirt/images:/var/lib/libvirt/images -v /var/run/libvirt:/var/run/libvirt -v $PWD:/workdir -v /var/tmp:/ignitiondir quay.io/karmab/kcli:2543a61'
+```
+
+Change SELinux policy to permessive:
 ``` bash
 sudo setenforce 0
 ```
@@ -10,14 +19,6 @@ Make sure root can perform ssh login:
 sudo nano /etc/ssh/sshd_config (and set PermitRootLogin to yes)
 sudo systemctl restart sshd
 ```
-Prerequisites: install kcli (https://github.com/karmab/kcli)
-
-Or just use the following alias:
-
-``` bash
-alias kcli='podman run --net host -it --rm --security-opt label=disable -v $HOME/.ssh:/root/.ssh -v $HOME/.kcli:/root/.kcli -v /var/lib/libvirt/images:/var/lib/libvirt/images -v /var/run/libvirt:/var/run/libvirt -v $PWD:/workdir -v /var/tmp:/ignitiondir quay.io/karmab/kcli:2543a61'
-```
-Change SELinux policy to permessive:
 
 To create a 3-node ceph cluster:
 
