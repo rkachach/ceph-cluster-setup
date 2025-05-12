@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 export IMAGE="quay.ceph.io/ceph-ci/ceph:main"
-export CADM="https://raw.githubusercontent.com/ceph/ceph/main/src/cephadm/cephadm.py"
 
 #systemctl start firewalld
 export PATH=/root/bin:$PATH
@@ -9,8 +8,7 @@ mkdir -p /root/bin
 {% if ceph_dev_folder is defined %}
   ln -s  /mnt{{ ceph_dev_folder }}/src/cephadm/cephadm  /root/bin/cephadm
 {% else %}
-  cd /root/bin
-  curl -o cephadm --silent --remote-name --location  $CADM
+  podman run --rm --entrypoint=cat quay.ceph.io/ceph-ci/ceph:main /usr/sbin/cephadm > /root/bin/cephadm
 {% endif %}
 chmod +x /root/bin/cephadm
 mkdir -p /etc/ceph
