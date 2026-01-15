@@ -8,7 +8,7 @@ parameters:
  netmask: 255.255.255.0
  numcpus: 1
  memory: 6144
- image: fedora38
+ image: fedora43
  notify: false
  admin_password: password
  disks:
@@ -23,6 +23,9 @@ parameters:
  reserveip: true
  reservedns: true
  sharedkey: true
+ user: fedora
+ keys:
+  - ~/.ssh/id_ed25519.pub
  nets:
   - name: {{ network_1 }}
     ip: {{ ip_prefix_1 }}.{{ node_ip_offset + number }}
@@ -37,7 +40,7 @@ parameters:
  files:
   - bootstrap-cluster.sh
  cmds:
- - dnf -y install python3 chrony lvm2 podman nano strace firewalld tcpdump
+ - dnf -y install python3 chrony lvm2 podman nano strace firewalld tcpdump net-tools
  - sed -i "s/SELINUX=enforcing/SELINUX=permissive/" /etc/selinux/config
  - setenforce 0
  {% if number == 0 %}
