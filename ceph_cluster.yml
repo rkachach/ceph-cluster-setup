@@ -1,7 +1,7 @@
 parameters:
  nodes: 3
  node_ip_offset: 100
- pool: ceph-orch
+ pool: default
  node_prefix_1: ceph
  network_1: ceph-orch
  ip_prefix_1: 192.168.100
@@ -11,20 +11,17 @@ parameters:
  image: fedora43
  notify: false
  admin_password: password
- # --- CHANGE START ---
  container_cfg:
    engine:
-     env:   #when you are behind vpn or similar env and require to pass through a proxy ,put your proxy configyuration
+     env:   # when you are behind vpn or similar env and require to pass through a proxy ,put your proxy configyuration
        #- HTTP_PROXY: "http://example.net:8080"
        #- HTTPS_PROXY: "http://example.net:8080"
        #- http_proxy: "http://example.net:8080"
        #- https_proxy: "http://example.net:8080"
        - NO_PROXY: "localhost,127.0.0.1,{{ ip_prefix_1 }}.0/24"
- # We now define disks as objects to allow setting the 'serial'
  disks:
  - size: 100               # Disk 1 (OS)
  - size: 10                # Disk 2 (Ceph Data)
- # --- CHANGE END ---
 
 {% for number in range(0, nodes) %}
 {{ node_prefix_1 }}-node-{{ '%d' % number }}:
