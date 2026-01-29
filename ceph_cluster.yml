@@ -54,8 +54,6 @@ parameters:
  - dnf -y install python3 chrony lvm2 podman nano strace firewalld tcpdump net-tools
  - sed -i "s/SELINUX=enforcing/SELINUX=permissive/" /etc/selinux/config
  - setenforce 0
- # Fix for udev in WSL environments: force trigger on boot
- - echo "udevadm trigger --type=devices --action=change" >> /root/.bashrc
  {% if container_cfg is defined %}
  - mkdir -p /etc/containers
  - echo "[engine]" > /etc/containers/containers.conf
