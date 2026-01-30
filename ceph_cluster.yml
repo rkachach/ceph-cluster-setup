@@ -11,9 +11,17 @@ parameters:
  image: fedora43
  notify: false
  admin_password: password
+ container_cfg:
+   engine:
+     env:   # when you are behind vpn or similar env and require to pass through a proxy ,put your proxy configyuration
+       #- HTTP_PROXY: "http://example.net:8080"
+       #- HTTPS_PROXY: "http://example.net:8080"
+       #- http_proxy: "http://example.net:8080"
+       #- https_proxy: "http://example.net:8080"
+       - NO_PROXY: "localhost,127.0.0.1,{{ ip_prefix_1 }}.0/24"
  disks:
- - 100
- - 10
+ - size: 100               # Disk 1 (OS)
+ - size: 10                # Disk 2 (Ceph Data)
 
 {% for number in range(0, nodes) %}
 {{ node_prefix_1 }}-node-{{ '%d' % number }}:
@@ -43,6 +51,16 @@ parameters:
  - dnf -y install python3 chrony lvm2 podman nano strace firewalld tcpdump net-tools
  - sed -i "s/SELINUX=enforcing/SELINUX=permissive/" /etc/selinux/config
  - setenforce 0
+ {% if container_cfg is defined %}
+ - mkdir -p /etc/containers
+ - echo "[engine]" > /etc/containers/containers.conf
+ - echo "env = [" >> /etc/containers/containers.conf
+ {% for env_entry in container_cfg.engine.env %}
+ {% set key_val = env_entry.items() | list | first %}
+ - echo "    \"{{ key_val[0] }}={{ key_val[1] }}\"{{ ',' if not loop.last else '' }}" >> /etc/containers/containers.conf
+ {% endfor %}
+ - echo "]" >> /etc/containers/containers.conf
+ {% endif %}
  {% if number == 0 %}
  - bash /root/bootstrap-cluster.sh
  {% endif %}
