@@ -11,6 +11,7 @@ parameters:
  image: fedora43
  notify: false
  admin_password: password
+ bootstrap_server_as_ntp_source: false
  container_cfg:
    engine:
      env:   # when you are behind vpn or similar env and require to pass through a proxy ,put your proxy configyuration
@@ -60,6 +61,20 @@ parameters:
  - echo "    \"{{ key_val[0] }}={{ key_val[1] }}\"{{ ',' if not loop.last else '' }}" >> /etc/containers/containers.conf
  {% endfor %}
  - echo "]" >> /etc/containers/containers.conf
+ {% endif %}
+ {% if bootstrap_server_as_ntp_source is defined %}
+ {% if number == 0 %}
+ - sed -i -r '/^(server|pool) /d' /etc/chrony.conf
+ - echo "local stratum 10" >> /etc/chrony.conf
+ - echo "allow {{ ip_prefix_1 }}.0/24" >> /etc/chrony.conf
+ - systemctl enable chronyd
+ - systemctl restart chronyd
+ {% else %}
+ - sed -i -r '/^(server|pool) /d' /etc/chrony.conf
+ - echo "server {{ ip_prefix_1 }}.{{ node_ip_offset }} iburst" >> /etc/chrony.conf
+ - systemctl enable chronyd
+ - systemctl restart chronyd
+ {% endif %}
  {% endif %}
  {% if number == 0 %}
  - bash /root/bootstrap-cluster.sh
