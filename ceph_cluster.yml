@@ -14,10 +14,10 @@ parameters:
  container_cfg:
    engine:
      env:   # when you are behind vpn or similar env and require to pass through a proxy ,put your proxy configyuration
-       #- HTTP_PROXY: "http://example.net:8080"
-       #- HTTPS_PROXY: "http://example.net:8080"
-       #- http_proxy: "http://example.net:8080"
-       #- https_proxy: "http://example.net:8080"
+       - HTTP_PROXY: "http://defra1c-proxy.emea.nsn-net.net:8080"
+       - HTTPS_PROXY: "http://defra1c-proxy.emea.nsn-net.net:8080"
+       - http_proxy: "http://defra1c-proxy.emea.nsn-net.net:8080"
+       - https_proxy: "http://defra1c-proxy.emea.nsn-net.net:8080"
        - NO_PROXY: "localhost,127.0.0.1,{{ ip_prefix_1 }}.0/24"
  disks:
  - size: 100               # Disk 1 (OS)
@@ -48,7 +48,7 @@ parameters:
  files:
   - bootstrap-cluster.sh
  cmds:
- - dnf -y install python3 chrony lvm2 podman nano strace firewalld tcpdump net-tools
+ - dnf -y install python3 chrony lvm2 podman nano strace firewalld tcpdump net-tools vim
  - sed -i "s/SELINUX=enforcing/SELINUX=permissive/" /etc/selinux/config
  - setenforce 0
  {% if container_cfg is defined %}
