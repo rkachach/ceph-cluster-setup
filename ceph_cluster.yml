@@ -15,10 +15,10 @@ parameters:
  container_cfg:
    engine:
      env:   # when you are behind vpn or similar env and require to pass through a proxy ,put your proxy configyuration
-       #- HTTP_PROXY: "http://example.net:8080"
-       #- HTTPS_PROXY: "http://example.net:8080"
-       #- http_proxy: "http://example.net:8080"
-       #- https_proxy: "http://example.net:8080"
+       - HTTP_PROXY: "http://defra1c-proxy.emea.nsn-net.net:8080"
+       - HTTPS_PROXY: "http://defra1c-proxy.emea.nsn-net.net:8080"
+       - http_proxy: "http://defra1c-proxy.emea.nsn-net.net:8080"
+       - https_proxy: "http://defra1c-proxy.emea.nsn-net.net:8080"
        - NO_PROXY: "localhost,127.0.0.1,{{ ip_prefix_1 }}.0/24"
  disks:
  - size: 100               # Disk 1 (OS)
