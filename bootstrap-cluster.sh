@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -x
 export IMAGE="quay.ceph.io/ceph-ci/ceph:main"
+export INTERFACE="{% if network_interface_name is defined %}{{ network_interface_name }}{% else %}ens3{% endif %}"
 
 #systemctl start firewalld
 export PATH=/root/bin:$PATH
@@ -12,7 +13,18 @@ mkdir -p /root/bin
 {% endif %}
 chmod a+rx /root/bin/cephadm
 mkdir -p /etc/ceph
-mon_ip=$(ifconfig ens3  | grep 'inet ' | awk '{ print $2}')
+
+get_mon_ip() {
+  local mon_ip
+  mon_ip=$(ip a show $INTERFACE | grep 'inet6 ' | grep -v 'fe80' | awk '{print $2}' | cut -d'/' -f1 | head -n 1)
+  # If no IPv6 found, check for IPv4
+  if [ -z "$mon_ip" ]; then
+    mon_ip=$(ip a show $INTERFACE | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 | head -n 1)
+  fi
+  echo "$mon_ip"
+}
+
+mon_ip=$(get_mon_ip)
 {% if ceph_dev_folder is defined %}
   python3 /root/bin/cephadm  --image $IMAGE bootstrap --mon-ip $mon_ip --initial-dashboard-password {{ admin_password }} --skip-monitoring-stack --allow-fqdn-hostname --dashboard-password-noupdate --shared_ceph_folder /mnt/{{ ceph_dev_folder }} 
 {% else %}

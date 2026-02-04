@@ -11,6 +11,7 @@ parameters:
  image: fedora43
  notify: false
  admin_password: password
+ network_interface_name: ens3
  bootstrap_server_as_ntp_source: false
  container_cfg:
    engine:
