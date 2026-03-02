@@ -6,6 +6,8 @@ parameters:
  network_1: ceph-orch
  ip_prefix_1: 192.168.100
  ipv6_prefix_1: ''  # Example of a real IPv6 prefix: '2620:52:0:1304'
+ local_registry_address: "" # Example: "192.168.100.254:5000"
+ local_registry_ceph_image: '' # Example: "/ceph/ceph:main"
  netmask: 255.255.255.0
  numcpus: 1
  memory: 6144
@@ -63,8 +65,8 @@ parameters:
  - dnf -y install python3 chrony lvm2 podman nano strace firewalld tcpdump net-tools vim
  - sed -i "s/SELINUX=enforcing/SELINUX=permissive/" /etc/selinux/config
  - setenforce 0
- {% if container_cfg is defined %}
  - mkdir -p /etc/containers
+ {% if container_cfg is defined %}
  - echo "[engine]" > /etc/containers/containers.conf
  - echo "env = [" >> /etc/containers/containers.conf
  {% for env_entry in container_cfg.engine.env %}
@@ -72,6 +74,11 @@ parameters:
  - echo "    \"{{ key_val[0] }}={{ key_val[1] }}\"{{ ',' if not loop.last else '' }}" >> /etc/containers/containers.conf
  {% endfor %}
  - echo "]" >> /etc/containers/containers.conf
+ {% endif %}
+ {% if local_registry_address is defined and local_registry_address %}
+ - echo "[[registry]]" > /etc/containers/registries.conf
+ - echo "location = \"{{ local_registry_address }}\"" >> /etc/containers/registries.conf
+ - echo "insecure = true" >> /etc/containers/registries.conf
  {% endif %}
  {% if bootstrap_server_as_ntp_source is defined %}
  {% if number == 0 %}

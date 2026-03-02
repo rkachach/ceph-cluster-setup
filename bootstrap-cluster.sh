@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -x
+{% if local_registry_address is defined and local_registry_address %}
+export IMAGE="{{ local_registry_address }}{{ local_registry_ceph_image }}"
+{% else %}
 export IMAGE="quay.ceph.io/ceph-ci/ceph:main"
+{% endif %}
 export INTERFACE="{% if network_interface_name is defined %}{{ network_interface_name }}{% else %}ens3{% endif %}"
 
 #systemctl start firewalld
