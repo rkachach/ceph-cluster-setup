@@ -13,7 +13,7 @@ mkdir -p /root/bin
 {% if ceph_dev_folder is defined %}
   ln -s  /mnt{{ ceph_dev_folder }}/src/cephadm/cephadm  /root/bin/cephadm
 {% else %}
-  podman run --rm --entrypoint=cat quay.ceph.io/ceph-ci/ceph:main /usr/sbin/cephadm > /root/bin/cephadm
+  podman run --rm --entrypoint=cat $IMAGE /usr/sbin/cephadm > /root/bin/cephadm
 {% endif %}
 chmod a+rx /root/bin/cephadm
 mkdir -p /etc/ceph
