@@ -29,6 +29,11 @@ NOTE: The IPv6 prefix length should be /64
 2. **node_ip_offset** : Set your IPv6 offset (e.g., `100`)
 3. **network_interface_type**: Set to `ipv6`
 
+The network interface configuration will be automatically applied during cluster setup using `nmcli` to configure the network connection dynamically based on the specified interface name. For the above example the following subnet
+will be created on the network interface configured by **network_interface_name**:
+- 2620:52:0:1304::/64
+Hosts added to the ceph cluster in bootstrap-cluster.sh will be given an IPv6 address with an incrementing offset.
+
 Local registry configuration:
 
 If you have a private container registry you wish the nodes to pull the Ceph image from, the following two parameters were added:
@@ -41,11 +46,6 @@ Both fields default to empty strings in `ceph_cluster.yml` and may be omitted if
 In the sample configuration above the nodes are given addresses in the **higher end** of the `192.168.100.0/24` range (starting at `.100`).  This is intentional so the remainder of the pool (e.g. `.1`–`.99`) is available for infrastructure like DNS, DHCP, or an HTTP/registry server.
 
 If you choose to use a private registry, it should be reachable on the same `/24` network; you can run it on one of the unused low‑numbered addresses and push Ceph images there ahead of time.  Doing so dramatically speeds up container downloads compared with pulling from an external source over the wider network, especially when bootstrapping multiple nodes.
-
-The network interface configuration will be automatically applied during cluster setup using `nmcli` to configure the network connection dynamically based on the specified interface name. For the above example the following subnet
-will be created on the network interface configured by **network_interface_name**:
-- 2620:52:0:1304::/64
-Hosts added to the ceph cluster in bootstrap-cluster.sh will be given an IPv6 address with an incrementing offset.
 
 To create a 3-node Ceph cluster:
 
