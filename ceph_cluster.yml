@@ -48,6 +48,7 @@ parameters:
     dns: {{ ip_prefix_1 }}.1
     {% if ipv6_prefix_1 is defined and ipv6_prefix_1 %}
     ipv6: "{{ ipv6_prefix_1 }}::{{ '%x' % (node_ip_offset + number) }}"
+    dns6: "{{ ipv6_prefix_1 }}::1"
     {% endif %}
  disks: {{ disks }}
  pool: {{ pool }}
@@ -57,11 +58,15 @@ parameters:
  files:
   - bootstrap-cluster.sh
  cmds:
- {% if network_interface_type is defined and network_interface_type == 'ipv6' %}
+{% if network_interface_type is defined and network_interface_type == 'ipv6' %}
  - connection_name=$(nmcli -g NAME,DEVICE con show | grep "{{ network_interface_name }}" | cut -d ':' -f1)
  - nmcli connection modify "$connection_name" ipv6.addresses "{{ ipv6_prefix_1 }}::{{ '%x' % (node_ip_offset + number) }}/64" ipv6.method manual
+ - nmcli connection modify "$connection_name" ipv6.dns "{{ ipv6_prefix_1 }}::1"
  - nmcli connection up "$connection_name"
- {% endif %}
+{% for i in range(0, nodes) %}
+ - echo '{{ ipv6_prefix_1 }}::{{ '%x' % (node_ip_offset + i) }} {{ node_prefix_1 }}-node-{{ i }}' >> /etc/hosts
+{% endfor %}
+{% endif %}
  - dnf -y install python3 chrony lvm2 podman nano strace firewalld tcpdump net-tools vim
  - sed -i "s/SELINUX=enforcing/SELINUX=permissive/" /etc/selinux/config
  - setenforce 0
