@@ -5,41 +5,42 @@ parameters:
  node_prefix_1: ceph
  network_1: ceph-orch
  ip_prefix_1: 192.168.100
- ipv6_prefix_1: ''  # Example of a real IPv6 prefix: '2620:52:0:1304'
- local_registry_address: "" # Example: "192.168.100.254:5000"
- local_registry_ceph_image: '' # Example: "/ceph/ceph:main"
+ ipv6_prefix_1: ''
  netmask: 255.255.255.0
  numcpus: 1
  memory: 6144
- image: fedora43
+ vm_image: fedora43
  notify: false
  admin_password: password
+
+ # Ceph container image. Can be upstream, custom quay, DS prod, or DS staging.
+ image: quay.ceph.io/ceph-ci/ceph:main
+
+ # Optional private registry auth.
+ registry_url: ""
+ registry_username: ""
+ registry_password: ""
+
+ # If true, cephadm is copied from ceph_dev_folder.
+ # If false, cephadm is extracted from the selected image.
+ use_local_cephadm: false
+
+ # Network settings
  network_interface_name: ens3
  network_interface_type: ipv4
- bootstrap_server_as_ntp_source: false  # if set as true, the first node will act as an ntp server for the rest of the nodes
- container_cfg:
-   engine:
-     env:   # when you are behind vpn or similar env and require to pass through a proxy ,put your proxy configyuration
-       #- HTTP_PROXY: "http://example.net:8080"
-       #- HTTPS_PROXY: "http://example.net:8080"
-       #- http_proxy: "http://example.net:8080"
-       #- https_proxy: "http://example.net:8080"
-       - NO_PROXY: "localhost,127.0.0.1,{{ ip_prefix_1 }}.0/24"
+
  disks:
- - size: 100               # Disk 1 (OS)
- - size: 10                # Disk 2 (Ceph Data)
+ - 100
+ - 10
 
 {% for number in range(0, nodes) %}
 {{ node_prefix_1 }}-node-{{ '%d' % number }}:
- image: {{ image }}
+ image: {{ vm_image }}
  numcpus: {{ numcpus }}
  memory: {{ memory }}
  reserveip: true
  reservedns: true
  sharedkey: true
- user: fedora
- keys:
-  - ~/.ssh/id_ed25519.pub
  nets:
   - name: {{ network_1 }}
     ip: {{ ip_prefix_1 }}.{{ node_ip_offset + number }}
@@ -56,7 +57,7 @@ parameters:
  sharedfolders: [{{ ceph_dev_folder }}]
  {% endif %}
  files:
-  - bootstrap-cluster.sh
+   - bootstrap-cluster.sh
  cmds:
 {% if network_interface_type is defined and network_interface_type == 'ipv6' %}
  - connection_name=$(nmcli -g NAME,DEVICE con show | grep "{{ network_interface_name }}" | cut -d ':' -f1)
@@ -67,39 +68,13 @@ parameters:
  - echo '{{ ipv6_prefix_1 }}::{{ '%x' % (node_ip_offset + i) }} {{ node_prefix_1 }}-node-{{ i }}' >> /etc/hosts
 {% endfor %}
 {% endif %}
- - dnf -y install python3 chrony lvm2 podman nano strace firewalld tcpdump net-tools vim
+ - dnf -y install python3 chrony lvm2 podman nano strace firewalld tcpdump curl net-tools vim
+ - systemctl enable --now chronyd
+ - systemctl enable --now firewalld || true
  - sed -i "s/SELINUX=enforcing/SELINUX=permissive/" /etc/selinux/config
- - setenforce 0
- - mkdir -p /etc/containers
- {% if container_cfg is defined %}
- - echo "[engine]" > /etc/containers/containers.conf
- - echo "env = [" >> /etc/containers/containers.conf
- {% for env_entry in container_cfg.engine.env %}
- {% set key_val = env_entry.items() | list | first %}
- - echo "    \"{{ key_val[0] }}={{ key_val[1] }}\"{{ ',' if not loop.last else '' }}" >> /etc/containers/containers.conf
- {% endfor %}
- - echo "]" >> /etc/containers/containers.conf
- {% endif %}
- {% if local_registry_address is defined and local_registry_address %}
- - echo "[[registry]]" > /etc/containers/registries.conf
- - echo "location = \"{{ local_registry_address }}\"" >> /etc/containers/registries.conf
- - echo "insecure = true" >> /etc/containers/registries.conf
- {% endif %}
- {% if bootstrap_server_as_ntp_source is defined %}
- {% if number == 0 %}
- - sed -i -r '/^(server|pool) /d' /etc/chrony.conf
- - echo "local stratum 10" >> /etc/chrony.conf
- - echo "allow {{ ip_prefix_1 }}.0/24" >> /etc/chrony.conf
- - systemctl enable chronyd
- - systemctl restart chronyd
- {% else %}
- - sed -i -r '/^(server|pool) /d' /etc/chrony.conf
- - echo "server {{ ip_prefix_1 }}.{{ node_ip_offset }} iburst" >> /etc/chrony.conf
- - systemctl enable chronyd
- - systemctl restart chronyd
- {% endif %}
- {% endif %}
- {% if number == 0 %}
- - bash /root/bootstrap-cluster.sh
- {% endif %}
+ - setenforce 0 || true
+ - if [ -n "{{ registry_username }}" ] && [ -n "{{ registry_password }}" ]; then podman login "{{ registry_url }}" -u "{{ registry_username }}" -p "{{ registry_password }}"; fi
+{% if number == 0 %}
+ - IMAGE="{{ image }}" ADMIN_PASSWORD="{{ admin_password }}" USE_LOCAL_CEPHADM="{{ use_local_cephadm | lower }}" NODES="{{ nodes }}" NODE_PREFIX="{{ node_prefix_1 }}" NODE_IP_OFFSET="{{ node_ip_offset }}" IP_PREFIX="{{ ip_prefix_1 }}" IPV6_PREFIX="{{ ipv6_prefix_1 }}" INTERFACE="{{ network_interface_name }}" NETWORK_INTERFACE_TYPE="{{ network_interface_type }}" REGISTRY_URL="{{ registry_url }}" REGISTRY_USERNAME="{{ registry_username }}" REGISTRY_PASSWORD="{{ registry_password }}"{% if ceph_dev_folder is defined %} CEPH_DEV_FOLDER="{{ ceph_dev_folder }}"{% endif %} bash /root/bootstrap-cluster.sh
+{% endif %}
 {% endfor %}
