@@ -17,6 +17,7 @@ parameters:
  network_interface_name: ens3
  network_interface_type: ipv4
  bootstrap_server_as_ntp_source: false  # if set as true, the first node will act as an ntp server for the rest of the nodes
+ disable_firewalld: false  # if set to true, firewalld will be disabled and stopped post-installation
  container_cfg:
    engine:
      env:   # when you are behind vpn or similar env and require to pass through a proxy ,put your proxy configyuration

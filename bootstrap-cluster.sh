@@ -44,3 +44,15 @@ fsid=$(cat /etc/ceph/ceph.conf | grep fsid | awk '{ print $3}')
   {% endif %}
 {% endfor %}
 python3 /root/bin/cephadm shell --fsid $fsid -c /etc/ceph/ceph.conf -k /etc/ceph/ceph.client.admin.keyring ceph orch apply osd --all-available-devices
+
+# Handle firewalld configuration
+{% if disable_firewalld is defined and disable_firewalld %}
+echo "Disabling and stopping firewalld as requested..."
+systemctl stop firewalld
+systemctl disable firewalld
+echo "Firewalld has been disabled and stopped."
+{% else %}
+if ! systemctl is-enabled firewalld >/dev/null 2>&1 || ! systemctl is-active firewalld >/dev/null 2>&1; then
+  echo "WARNING: firewalld is not enabled or not running. Ceph cluster may have connectivity issues if firewall rules are not properly configured."
+fi
+{% endif %}
